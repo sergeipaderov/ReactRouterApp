@@ -1,30 +1,50 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
+import { Route, Switch, withRouter } from 'react-router-dom';
 
 import Toolbar from './components/Toolbar';
 import Content from './components/Content';
+import Sidenav from './components/Sidenav';
+import PrivateRoute from './components/PrivateRoute';
 import Home from './pages/Home';
 import About from './pages/About';
 import Books from './pages/Books';
 import Login from './pages/Login';
+import Logout from './pages/Logout';
+import NotFound from './pages/NotFound';
 
 class App extends Component {
+    state = {
+        user: null
+    }
+
+    login = user => {
+        this.setState({ user }, () => this.props.history.push('/books'));
+    }
+
+    logout = () => {
+        this.setState({ user: null }, () => this.props.history.push('/'));
+    }
+
     render() {
-        return (
-            <Router>
-                <div className="app">
-                    <Toolbar />
-                    
-                    <Content>
+        return (            
+            <div className="app">
+                <Toolbar user={this.state.user} />
+                
+                <Content>
+                <Route path="/books" render={() => <Sidenav topics={this.props.topics} />} />
+                    <Switch>
                         <Route exact path="/" component={Home} />
-                        <Route path="/about" component={About} />
-                        <Route path="/books" component={Books} />
-                        <Route path="/login" component={Login} />
-                    </Content>
-                </div>
-            </Router>
+                        <Route path="/about" component={About} />                            
+                        <Route path="/login" render={props => <Login onLogin={this.login} />} />
+                        <Route path="/logout" render={props => <Logout onLogin={this.logout} />} />
+                        <PrivateRoute exact path="/books/:topic?" user={this.state.user} component={Books} data={this.props.books} />
+                        <privateRoute path="/books/:topic/:book" user={this.state.user} component={Books} data={this.props.books} />
+                        <Route component={NotFound} />
+                    </Switch>
+                </Content>
+            </div>            
         );
     }
 }
 
-export default App;
+export default withRouter(App);
